@@ -7,18 +7,29 @@ export function useTasks(query, status, page, pageSize) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+    useEffect(() => {
+    // If the effect re-runs before this request settles, ignore its result
+    let ignore = false;
+
     setLoading(true);
 
     fetchTasks({ query, status, page, pageSize })
       .then((data) => {
+        if (ignore) return;
         setTasks(data.items);
         setTotal(data.total);
+        setError(null);
         setLoading(false);
       })
       .catch((err) => {
+        if (ignore) return;
         setError(err.message);
+        setLoading(false);
       });
+
+    return () => {
+      ignore = true;
+    };
   }, [query, status, page, pageSize]);
 
   return { tasks, total, loading, error };

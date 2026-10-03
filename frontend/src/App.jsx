@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SearchBar from './components/SearchBar';
 import StatusFilter from './components/StatusFilter';
 import TaskTable from './components/TaskTable';
@@ -7,7 +7,12 @@ import { useTasks } from './hooks/useTasks';
 export default function App() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('');
-  const [page, setPage] = useState(1);
+    const [page, setPage] = useState(1);
+
+  // Reset to page 1 whenever the result set changes
+  useEffect(() => {
+    setPage(1);
+  }, [query, status]);
 
   const { tasks, total, loading, error } = useTasks(query, status, page, 10);
 

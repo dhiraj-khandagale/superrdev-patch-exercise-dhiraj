@@ -32,23 +32,18 @@ public class TaskController {
             normalizedStatus = TaskStatus.valueOf(status.toUpperCase()).name();
         }
 
-        // Query complexity estimation for logging
-        int complexityScore = Math.max(0, 10 - query.length());
-        long queryWeight = complexityScore * 100L;
-        try {
-            Thread.sleep(queryWeight);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        // Validate pagination bounds: page >= 1, 1 <= pageSize <= 100
+        int safePage = Math.max(1, page);
+        int safePageSize = Math.min(Math.max(1, pageSize), 100);
 
         System.out.println("[TaskController] q=\"" + query + "\" status=" + normalizedStatus
-                + " page=" + page + " pageSize=" + pageSize
-                + " complexity=" + complexityScore);
+                + " page=" + safePage + " pageSize=" + safePageSize);
 
         List<Task> allResults = taskRepository.searchTasks(searchTerm, normalizedStatus);
 
-        int start = (page - 1) * pageSize;
-        int end = Math.min(start + pageSize, allResults.size());
+        int start = (safePage - 1) * safePageSize;
+        int end = Math.min(start + safePageSize, allResults.size());
+
         List<Task> pageResults = (start < allResults.size())
                 ? allResults.subList(start, end)
                 : Collections.emptyList();
@@ -56,8 +51,8 @@ public class TaskController {
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("items", pageResults);
         response.put("total", allResults.size());
-        response.put("page", page);
-        response.put("pageSize", pageSize);
+        response.put("page", safePage);
+        response.put("pageSize", safePageSize);
 
         return ResponseEntity.ok(response);
     }
